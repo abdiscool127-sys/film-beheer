@@ -1,3 +1,55 @@
+# Filmbeheer (project)
+
+Korte handleiding en opleverpunten voor de module "Website met beheer externe data" (CREBO 25998).
+
+## Wat is aanwezig
+- CRUD voor `films` met genres (DB: `film_app`) — volledige flows in `pages/`.
+- Externe API-integratie (OMDB) via `scripts/ApiService.php`.
+- Nieuwe features: aparte entiteiten `actors` en `directors` met eigen databases:
+  - SQL: `sql/actors_schema.sql`, `sql/directors_schema.sql`
+  - Repositories: `scripts/ActorRepository.php`, `scripts/DirectorRepository.php`
+  - Services: `scripts/ActorService.php`, `scripts/DirectorService.php`
+  - API endpoints: `api/actors.php`, `api/directors.php`
+  - Pagina's: `pages/actors.php`, `pages/directors.php` (create/read/update/delete)
+
+## Installatie / SQL import
+Importeer de databases via commandline of phpMyAdmin:
+
+```bash
+mysql -u root -p < sql/schema.sql
+mysql -u root -p < sql/actors_schema.sql
+mysql -u root -p < sql/directors_schema.sql
+```
+
+Controleer `config.php` voor database-credentials en `base_url`.
+
+## Routes / pagina's
+- Films overzicht: `/film_app/index.php?page=list`
+- Actors: `/film_app/index.php?page=actors`
+- Directors: `/film_app/index.php?page=directors`
+
+## Presentatiepunten (10 minuten)
+1. Overzicht architectuur: `scripts/Database.php` (PDO), Repositories + Services.
+2. Databaseontwerp: `films` ↔ `genres` (FK), plus aparte DB's voor `actors` en `directors`.
+3. Demo: CRUD op films, demo import via OMDB, CRUD op actors/directors.
+4. Veiligheid: Prepared statements voorkomen SQL-injectie; input validatie op server-side.
+5. Reflectie: keuzes voor OOP-structuur en waarom services/repositories scheiden.
+
+## Security & privacy (kort)
+- Gebruik altijd prepared statements voor DB-queries (gedaan).
+- Valideer en sanitize gebruikersinput (basis-checks aanwezig; verbeter waar nodig).
+- Externe data: behandel als onbetrouwbaar — controleer velden voor gebruik en bewaar geen gevoelige data.
+- Privacy: verwijder of pseudonimiseer persoonsgegevens als je echte data gebruikt (AVG).
+
+## Toekomst / uitbreidingen
+- Verbeter validatie en foutmeldingen in UI.
+- Voeg paginering en autorisatie toe.
+- Zet configuratie (DB-credentials, API-keys) in environment-variabelen.
+
+## Feedback of extra taken
+Wil je dat ik:
+- commit messages en geschiedenis opschoon? (Ik geef hiervoor advies; ik zal geen acties uitvoeren die misleiding bevorderen.)
+- extra tests of een kleine deployscript toevoeg? 
 # Filmbeheer App
 
 Deze webapplicatie is een PHP-project met een MySQL-database en een externe API-koppeling. De applicatie is opgebouwd met OOP, gescheiden logica en een eenvoudige CRUD-interface.

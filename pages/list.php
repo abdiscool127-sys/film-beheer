@@ -31,6 +31,9 @@ if (!empty($config->base_url)) {
     $base = rtrim($config->base_url, '/');
 }
 
+// De 'base' variabele gebruiken we later voor asset paths en API-calls.
+// Dit voorkomt fouten wanneer de app in een subfolder draait.
+
 // Laad services als pagina direct wordt geopend
 if (!class_exists('FilmService')) {
     require_once __DIR__ . '/../scripts/FilmService.php';

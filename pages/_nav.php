@@ -19,6 +19,12 @@
         <li class="nav-item">
           <a class="nav-link" href="<?= $base ?>/index.php?page=genre">Zoek op genre</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= $base ?>/index.php?page=actors">Acteurs</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= $base ?>/index.php?page=directors">Regisseurs</a>
+        </li>
       </ul>
     </div>
   </div>

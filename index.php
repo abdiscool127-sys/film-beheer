@@ -18,7 +18,7 @@ $config = require __DIR__ . '/config.php';
 $page = $_GET['page'] ?? 'list';
 
 // Lijst van toegestane pages (veiligheid: voorkoom directory traversal)
-$allowed = ['list','create','edit','delete','import','genre'];
+$allowed = ['list','create','edit','delete','import','genre','actors','directors'];
 
 // Als page niet in allowed-list: fout geven
 if (!in_array($page, $allowed)) {
