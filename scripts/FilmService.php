@@ -98,6 +98,7 @@ class FilmService
         }
         
         // Geen fouten: sla op en geef leeg array terug
+        // Hierbij vertrouwt de service op de repository voor de daadwerkelijke DB-operatie.
         $this->repo->create($data);
         return [];
     }
@@ -157,7 +158,10 @@ class FilmService
      */
     public function importFromApi($apiData)
     {
-        // Zet data om naar intern formaat
+        // Map externe API-velden naar het interne database-formaat.
+        // We kiezen bewust voor defensieve mapping (gebruik nulls wanneer velden
+        // ontbreken) en zetten onbruikbare placeholder-waarden (
+        // 'N/A') om naar NULL.
         $data = [
             'titel' => $apiData['Title'] ?? '',
             'jaar' => $apiData['Year'] ?? null,
@@ -167,7 +171,10 @@ class FilmService
             'rating' => $apiData['imdbRating'] ?? null,
         ];
 
-        // Probeer genre te mappen naar bestaande genre_id
+
+        // Probeer genre te mappen naar bestaande genre_id.
+        // Indien het genre nog niet bestaat, zorgt findGenreIdByName ervoor
+        // dat het genre wordt aangemaakt en het nieuwe id teruggegeven wordt.
         $genreId = null;
         if (!empty($apiData['Genre'])) {
             $genreId = $this->repo->findGenreIdByName($apiData['Genre']);

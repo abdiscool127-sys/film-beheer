@@ -42,6 +42,7 @@ class FilmRepository
                  WHERE f.titel LIKE :s
                  ORDER BY f.id DESC'
             );
+            // Bind de parameter zodat speciale tekens veilig worden verwerkt
             $stmt->execute([':s' => "%$search%"]);
         } else {
             // Geen voorzorgsmaatregel nodig hier (geen user-input)
@@ -80,6 +81,7 @@ class FilmRepository
      */
     public function getGenres()
     {
+        // Eenvoudige query zonder user-input: direct uitvoeren met query()
         $stmt = $this->db->query('SELECT id, genre_naam FROM genres ORDER BY genre_naam ASC');
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -95,6 +97,7 @@ class FilmRepository
         if (empty($genre)) return [];
 
         // Als numeriek: behandel als genre_id
+        // Als de gebruiker een id opgeeft (numeriek), filter direct op genre_id
         if (is_numeric($genre)) {
             $stmt = $this->db->prepare(
                 'SELECT f.*, g.genre_naam
@@ -108,6 +111,8 @@ class FilmRepository
         }
 
         // Anders: zoek op genre_naam LIKE
+        // Anders: zoek op genre-naam met LIKE (deelmatching).
+        // Dit is handig voor zoekvelden waarin gebruikers 'Actie' of 'Com' typen.
         $stmt = $this->db->prepare(
             'SELECT f.*, g.genre_naam
              FROM films f
@@ -134,6 +139,9 @@ class FilmRepository
         $parts = explode(',', $name);
         $first = trim($parts[0]);
 
+        // Zoek op (gedeeltelijke) match met LIKE zodat varianten gevonden worden
+        // (bijv. 'Actie' wordt gevonden wanneer in DB 'Actie/Thriller' staat).
+        // We beperken tot LIMIT 1 omdat we slechts één id nodig hebben.
         $stmt = $this->db->prepare('SELECT id FROM genres WHERE genre_naam LIKE :n LIMIT 1');
         $stmt->execute([':n' => "%$first%"]);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -162,6 +170,11 @@ class FilmRepository
             return $this->filmColumns;
         }
 
+        // Vraag MySQL welke kolommen daadwerkelijk aanwezig zijn.
+        // Dit maakt de INSERT/UPDATE dynamisch en tolerant voor schema-verschillen.
+        // SHOW COLUMNS: vraag direct aan MySQL welke velden er zijn.
+        // Dit maakt de insert/update dynamisch en voorkomt errors wanneer
+        // een optioneel veld ontbreekt in een bepaalde installatie.
         $stmt = $this->db->query('SHOW COLUMNS FROM films');
         $columns = [];
 
@@ -188,14 +201,19 @@ class FilmRepository
         $placeholders = [];
         $values = [];
 
+        // Loop door de mogelijke kolommen en neem alleen die mee die ook
+        // daadwerkelijk in de tabel aanwezig zijn (robustheid bij schema-varianten).
         foreach (['titel', 'jaar', 'genre_id', 'beschrijving', 'poster', 'rating'] as $column) {
             if (in_array($column, $availableColumns, true)) {
                 $columns[] = $column;
                 $placeholders[] = ':' . $column;
+                // Gebruik null wanneer waarde ontbreekt; dit voorkomt fouten
+                // bij velden die optioneel zijn.
                 $values[':' . $column] = $data[$column] ?? null;
             }
         }
 
+        // Bouw de INSERT statement dynamisch en voer uit met prepared statement.
         $sql = 'INSERT INTO films (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')';
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($values);
@@ -214,6 +232,7 @@ class FilmRepository
         $sets = [];
         $values = [':id' => $id];
 
+        // Bereid de SET-clausules voor alleen bestaande kolommen voor.
         foreach (['titel', 'jaar', 'genre_id', 'beschrijving', 'poster', 'rating'] as $column) {
             if (in_array($column, $availableColumns, true)) {
                 $sets[] = $column . ' = :' . $column;
@@ -221,6 +240,8 @@ class FilmRepository
             }
         }
 
+        // Voer de update uit met prepared statement zodat waarden veilig gebonden
+        // en correct ge-escaped worden.
         $sql = 'UPDATE films SET ' . implode(', ', $sets) . ' WHERE id = :id';
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($values);

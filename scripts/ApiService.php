@@ -44,18 +44,24 @@ class ApiService
             ];
         }
         
-        // Bouw OMDB API-link
+        // Bouw OMDB API-link. Let op: we gebruiken parameter 't' voor title lookup.
+        // We encoden de API-key en titel om problemen met speciale tekens te voorkomen.
         $url = $this->config->api_url . '?apikey=' . urlencode($this->config->api_key) . '&t=' . urlencode($title);
         
         // Beperk timeout naar 5 seconden (sneller falen dan oneindig wachten)
         $opts = ['http' => ['timeout' => 5]];
         $context = stream_context_create($opts);
-        
-        // Voer HTTP-request uit
+
+        // Voer HTTP-request uit. We gebruiken @ om warnings te onderdrukken
+        // omdat file_get_contents bij netwerkfouten warnings genereert in plaats
+        // van exceptions. In dat geval retourneren we null zodat de caller kan
+        // reageren op de fout (bijv. foutmelding tonen).
         $resp = @file_get_contents($url, false, $context);
         if ($resp === false) return null; // Verbinding mislukt
         
         // Parse JSON-respons
+        // Decodeer JSON naar associatieve array. De caller (FilmService / pages)
+        // controleert vervolgens of de response valide is en handelt fouten af.
         $data = json_decode($resp, true);
         return $data;
     }
